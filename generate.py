@@ -6,11 +6,25 @@ Filters out any samples that appear in the original training data.
 import json
 import math
 import random
-random.seed(42)
+import argparse
+
+# コマンドライン引数の解析
+parser = argparse.ArgumentParser(description='学習済みモデルから新しいサンプルを生成')
+parser.add_argument('--model', '-m', type=str, default='model.json',
+                    help='モデルファイル名 (default: model.json)')
+parser.add_argument('--input', '-i', type=str, default='input.txt',
+                    help='学習データファイル名 (default: input.txt)')
+parser.add_argument('--output', '-o', type=str, default='generated_new_samples.txt',
+                    help='出力ファイル名 (default: generated_new_samples.txt)')
+parser.add_argument('--seed', '-s', type=int, default=42,
+                    help='ランダムシード (default: 42)')
+args = parser.parse_args()
+
+random.seed(args.seed)
 
 # Load the trained model
-print("Loading model from model.json...")
-with open('model.json', 'r') as f:
+print(f"Loading model from {args.model}...")
+with open(args.model, 'r') as f:
     checkpoint = json.load(f)
 
 # Extract configuration
@@ -32,9 +46,9 @@ state_dict = checkpoint['state_dict']
 print(f"Model loaded: vocab_size={vocab_size}, n_layer={n_layer}, n_embd={n_embd}")
 
 # Load training data to filter out duplicates
-print("Loading training data from input.txt...")
+print(f"Loading training data from {args.input}...")
 training_docs = set()
-with open('input.txt', 'r') as f:
+with open(args.input, 'r') as f:
     for line in f:
         line = line.strip()
         if line:
@@ -137,8 +151,7 @@ for idx, sample in enumerate(new_samples, 1):
     print(f"{idx:3d}: {sample}")
 
 # Save to file
-output_file = "generated_new_samples.txt"
-with open(output_file, 'w') as f:
+with open(args.output, 'w') as f:
     for sample in new_samples:
         f.write(sample + '\n')
-print(f"\n新しいサンプルを {output_file} に保存しました。")
+print(f"\n新しいサンプルを {args.output} に保存しました。")
