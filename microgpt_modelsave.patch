@@ -1,0 +1,40 @@
+--- microgpt_org.py	2026-02-23 06:42:31
++++ microgpt.py	2026-02-23 06:48:47
+@@ -6,6 +6,8 @@
+ @karpathy
+ """
+ 
++import sys
++sys.setrecursionlimit(5000)
+ import os       # os.path.exists
+ import math     # math.log, math.exp
+ import random   # random.seed, random.choices, random.gauss, random.shuffle
+@@ -198,3 +200,28 @@
+             break
+         sample.append(uchars[token_id])
+     print(f"sample {sample_idx+1:2d}: {''.join(sample)}")
++
++# Save the trained model to a file
++import json     # json.dump for saving model
++print("\n--- saving model ---")
++model_checkpoint = {
++    'config': {
++        'vocab_size': vocab_size,
++        'n_layer': n_layer,
++        'n_embd': n_embd,
++        'block_size': block_size,
++        'n_head': n_head,
++    },
++    'tokenizer': {
++        'uchars': uchars,
++        'BOS': BOS,
++    },
++    'state_dict': {}
++}
++# Extract .data from all Value objects in state_dict
++for key, matrix in state_dict.items():
++    model_checkpoint['state_dict'][key] = [[p.data for p in row] for row in matrix]
++
++with open('model.json', 'w') as f:
++    json.dump(model_checkpoint, f)
++print("Model saved to model.json")
