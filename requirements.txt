@@ -1,0 +1,24 @@
+# MicroGPT モデル可視化システム 依存パッケージ
+
+# 数値計算基盤
+numpy>=1.24.0
+
+# データ処理
+pandas>=2.0.0
+
+# 可視化ライブラリ
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.14.0
+
+# グラフ構造可視化
+networkx>=3.0
+
+# 機械学習ツール
+scikit-learn>=1.2.0
+
+# 日本語フォント対応
+japanize-matplotlib>=1.1.3
+
+# Jupyter Notebook
+jupyter>=1.0.0
