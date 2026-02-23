@@ -31,22 +31,86 @@ SAMPLE_HISTORY_SIZE = 3  # バッチ
 NEGATIVE_PROMPT_SIZE = 20  # パターン
 TEMPLATE_ROTATION_INTERVAL = 100  # バッチ
 
-# カテゴリ別生成配分
-CATEGORIES: List[Tuple[str, int]] = [
-    ("数値計算", 5000),
-    ("ビット演算", 2000),
-    ("文字列操作", 5000),
-    ("データ構造", 5000),
-    ("真偽値・条件式", 3000),
-    ("組み込み関数", 4000),
-    ("型変換", 2000),
-    ("スライス記法", 2000),
-    ("標準ライブラリ", 1000),
-    ("その他・応用", 1000),
+# 目標総数設定
+TOTAL_TARGET_DEFAULT = 6000  # デフォルト総数
+TOTAL_TARGET_MIN = 600  # 最小総数
+TOTAL_TARGET_MAX = 30000  # 最大総数
+
+# カテゴリ名リスト（順序保証）
+CATEGORY_NAMES = [
+    "数値計算",
+    "ビット演算",
+    "文字列操作",
+    "データ構造",
+    "真偽値・条件式",
+    "組み込み関数",
+    "型変換",
+    "スライス記法",
+    "標準ライブラリ",
+    "その他・応用",
 ]
 
-# 目標総数
-TOTAL_TARGET = 30000
+# カテゴリ別速度重み（テスト結果から）
+# 値が大きいほど速いカテゴリ（多く配分）
+CATEGORY_SPEED_WEIGHTS = {
+    "数値計算": 1.0,      # 3.20秒/パターン → 普通
+    "ビット演算": 2.7,    # 1.19秒 → 速い
+    "文字列操作": 3.4,    # 0.95秒 → 速い
+    "データ構造": 3.3,     # 0.97秒 → 速い
+    "真偽値・条件式": 3.3,  # 0.96秒 → 速い
+    "組み込み関数": 0.17,  # 18.40秒 → 非常に遅い
+    "型変換": 0.12,     # 27.49秒 → 非常に遅い
+    "スライス記法": 4.2,   # 0.76秒 → 速い
+    "標準ライブラリ": 0.09,  # 33.66秒 → 非常に遅い
+    "その他・応用": 0.23,  # 13.88秒 → 遅い
+}
+
+# カテゴリ別最小目標数（品質保証のため）
+MIN_CATEGORY_TARGET = 60  # 最小60パターン
+
+def calculate_category_targets(total_target: int = TOTAL_TARGET_DEFAULT) -> List[Tuple[str, int]]:
+    """
+    総目標数から各カテゴリの目標数を計算
+    速度重みに基づいて配分し、遅いカテゴリは少なく、速いカテゴリは多く配分
+    
+    Args:
+        total_target: 総目標パターン数
+        
+    Returns:
+        (category_name, target_count)のリスト
+    """
+    # 総重みを計算
+    total_weight = sum(CATEGORY_SPEED_WEIGHTS[cat] for cat in CATEGORY_NAMES)
+    
+    # 各カテゴリの目標数を計算
+    targets = []
+    allocated = 0
+    
+    for cat in CATEGORY_NAMES:
+        weight = CATEGORY_SPEED_WEIGHTS[cat]
+        # 重みに応じて配分
+        target = int((weight / total_weight) * total_target)
+        # 最小値を保証
+        target = max(MIN_CATEGORY_TARGET, target)
+        targets.append((cat, target))
+        allocated += target
+    
+    # 端数処理：差分を最も速いカテゴリに配分
+    diff = total_target - allocated
+    if diff != 0:
+        # 最も重みが大きい（速い）カテゴリを見つける
+        max_weight_idx = max(range(len(CATEGORY_NAMES)), 
+                           key=lambda i: CATEGORY_SPEED_WEIGHTS[CATEGORY_NAMES[i]])
+        targets[max_weight_idx] = (targets[max_weight_idx][0], 
+                                  targets[max_weight_idx][1] + diff)
+    
+    return targets
+
+# デフォルトのカテゴリ別生成配分（後方互換性のため）
+CATEGORIES: List[Tuple[str, int]] = calculate_category_targets(TOTAL_TARGET_DEFAULT)
+
+# 目標総数（後方互換性のため）
+TOTAL_TARGET = TOTAL_TARGET_DEFAULT
 
 # 出力ファイル名
 OUTPUT_FILENAME = "python_oneliners_30k.txt"

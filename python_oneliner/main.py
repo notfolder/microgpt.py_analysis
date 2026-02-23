@@ -8,7 +8,11 @@ import argparse
 from typing import Dict
 from datetime import timedelta
 
-from config import CATEGORIES, OUTPUT_FILENAME, TOTAL_TARGET
+from config import (
+    CATEGORIES, OUTPUT_FILENAME, TOTAL_TARGET,
+    TOTAL_TARGET_DEFAULT, TOTAL_TARGET_MIN, TOTAL_TARGET_MAX,
+    calculate_category_targets
+)
 from generator import Generator
 from validator import validate
 from deduplicator import Deduplicator
@@ -31,14 +35,28 @@ def main():
         action='store_true',
         help='テストモード（各カテゴリ10パターンのみ生成）'
     )
+    parser.add_argument(
+        '--total-target', '-t',
+        type=int,
+        default=TOTAL_TARGET_DEFAULT,
+        help=f'総目標パターン数 (default: {TOTAL_TARGET_DEFAULT}, range: {TOTAL_TARGET_MIN}-{TOTAL_TARGET_MAX})'
+    )
     args = parser.parse_args()
+    
+    # 総目標数のバリデーション
+    if args.total_target < TOTAL_TARGET_MIN or args.total_target > TOTAL_TARGET_MAX:
+        print(f"エラー: --total-targetは{TOTAL_TARGET_MIN}～{TOTAL_TARGET_MAX}の範囲で指定してください")
+        return
+    
+    # カテゴリ別目標数を動的に計算
+    categories = calculate_category_targets(args.total_target)
     
     # テストモードの場合は目標数を調整
     if args.test:
-        categories = [(name, 10) for name, _ in CATEGORIES]
+        categories = [(name, 10) for name, _ in categories]
         print("=== テストモード ===")
-    else:
-        categories = CATEGORIES
+    
+    print(f"総目標パターン数: {sum(count for _, count in categories):,}")
     
     # 開始時刻
     start_time = time.time()
@@ -66,7 +84,12 @@ def main():
     print(f"出力ファイル: {args.output}")
     
     # 本番のカテゴリ別目標数（推定用）
-    production_targets = dict(CATEGORIES)
+    if args.test:
+        # テストモードの場合、本番の目標数を計算
+        production_targets = dict(calculate_category_targets(args.total_target))
+    else:
+        # 本番モードの場合、現在のcategoriesを使用
+        production_targets = dict(categories)
     total_categories = len(categories)
     
     with open(args.output, 'w', encoding='utf-8') as f:
@@ -231,9 +254,6 @@ def main():
         print("=== カテゴリ別 所要時間推定 ===")
         print('='*60)
         
-        # 本番のカテゴリ別目標数
-        production_targets = dict(CATEGORIES)
-        
         total_estimated_time = 0
         
         print(f"\n{'カテゴリ':12s} | {'テスト':>8s} | {'本番目標':>8s} | {'所要時間':>12s} | {'推定時間':>12s}")
@@ -264,9 +284,9 @@ def main():
         total_estimated_hours = total_estimated_time / 3600
         total_estimated_timedelta = timedelta(seconds=int(total_estimated_time))
         
-        print(f"\n{'合計推定時間':12s} | {'':>8s} | {30000:8d} | {'':>12s} | {str(total_estimated_timedelta):>12s}")
+        print(f"\n{'合計推定時間':12s} | {'':>8s} | {args.total_target:8d} | {'':>12s} | {str(total_estimated_timedelta):>12s}")
         print(f"\n推定結果:")
-        print(f"  - 30,000パターン生成予想時間: {total_estimated_timedelta}")
+        print(f"  - {args.total_target:,}パターン生成予想時間: {total_estimated_timedelta}")
         print(f"  - 約 {total_estimated_hours:.1f} 時間")
         
         if total_estimated_hours > 10:
