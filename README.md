@@ -47,7 +47,8 @@ jupyter notebook
 ## 俳句モデルの作成
 
 青空文庫から俳句を抽出したaozora_haiku_30000.txt(約4000句)を学習させた.  
-microgpt.pyは26文字の英字のみを想定しているため、日本語を学習させるには最低限パラメータ調整しないとまともな俳句が出にくい.
+microgpt.pyは26文字の英字のみを想定しているため、日本語を学習させるには最低限パラメータ調整しないとまともな俳句が出にくい.  
+まともな俳句を生成するにはmicrogpt.pyの範疇を超えるモデルを作る必要がある.
 
 - 学習済みモデル: haiku_orgparam_model.json
 - 生成結果: generated_haiku_samples01.txt
