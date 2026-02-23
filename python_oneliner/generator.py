@@ -244,11 +244,18 @@ Vary the patterns and avoid duplicating the examples."""
                             lines = content.split('\n')
                             for line in lines:
                                 line = line.strip()
+                                # コメント行をスキップ
+                                if not line or line.startswith('#'):
+                                    continue
                                 # 番号や記号を除去
                                 if line and not line[0].isdigit():
                                     results.append(line)
                                 elif line and '. ' in line:
-                                    results.append(line.split('. ', 1)[1])
+                                    # 番号付きの場合、番号を除去
+                                    code_part = line.split('. ', 1)[1].strip()
+                                    # コメント行でないことを確認
+                                    if code_part and not code_part.startswith('#'):
+                                        results.append(code_part)
                     
                     # バッチカウンタを増加
                     self.batch_counter += 1

@@ -131,6 +131,12 @@ def validate(code: str) -> Dict[str, Any]:
         'executable': False,
     }
     
+    # コメント行チェック
+    code_stripped = code.strip()
+    if not code_stripped or code_stripped.startswith('#'):
+        result['error'] = "Comment or empty line"
+        return result
+    
     # 文字数検証
     result['length_ok'] = validate_length(code)
     if not result['length_ok']:

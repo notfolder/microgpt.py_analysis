@@ -33,12 +33,11 @@ TEMPLATE_ROTATION_INTERVAL = 100  # バッチ
 
 # カテゴリ別生成配分
 CATEGORIES: List[Tuple[str, int]] = [
-    ("数値計算", 5000),
-    ("文字列操作", 5000),
-    ("データ構造", 5000),
-    ("内包表記", 5000),
-    ("組み込み関数", 5000),
-    ("標準ライブラリ", 3000),
+    ("数値計算", 6000),
+    ("文字列操作", 6000),
+    ("データ構造", 6000),
+    ("組み込み関数", 6000),
+    ("標準ライブラリ", 4000),
     ("その他・応用", 2000),
 ]
 
@@ -57,18 +56,20 @@ Requirements:
 - No syntax errors
 - Returns a value or has side effects
 - Creative and diverse patterns
+- Output ONLY executable code, NO comments, NO explanations
 
 Avoid:
 - Code that causes errors
 - Meaningless character strings
-- Duplicate or similar patterns"""
+- Duplicate or similar patterns
+- Comments (lines starting with #)
+- Incomplete code"""
 
 # カテゴリ別英語名マッピング
 CATEGORY_ENGLISH: Dict[str, str] = {
     "数値計算": "Numeric Computation",
     "文字列操作": "String Manipulation",
     "データ構造": "Data Structures",
-    "内包表記": "Comprehensions",
     "組み込み関数": "Built-in Functions",
     "標準ライブラリ": "Standard Library",
     "その他・応用": "Advanced Patterns",
