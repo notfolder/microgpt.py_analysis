@@ -139,10 +139,17 @@ def main():
                     if category_count >= target_count:
                         break
                 
-                # 進捗表示（100パターンごと）
+                # カテゴリ内進捗表示（10パターンごと）
+                if category_count > 0 and category_count % 10 == 0:
+                    category_progress_pct = (category_count / target_count) * 100
+                    category_elapsed_so_far = time.time() - category_start_time
+                    print(f"  [{category_name}] {category_count}/{target_count} ({category_progress_pct:.1f}%) | "
+                          f"経過: {timedelta(seconds=int(category_elapsed_so_far))}")
+                
+                # 全体進捗表示（100パターンごと）
                 if total_generated % 100 == 0:
                     elapsed = time.time() - start_time
-                    print(f"進捗: {total_generated} 生成 | "
+                    print(f"全体進捗: {total_generated} 生成 | "
                           f"{validated_count} 検証通過 | "
                           f"{duplicate_count} 重複除外 | "
                           f"経過時間: {timedelta(seconds=int(elapsed))}")
