@@ -58,6 +58,10 @@ def main():
     # カテゴリ別所要時間
     category_times: Dict[str, float] = {}
     
+    # カテゴリ別重複カウンタ
+    category_duplicates: Dict[str, int] = {name: 0 for name, _ in categories}
+    category_total_generated: Dict[str, int] = {name: 0 for name, _ in categories}
+    
     # 出力ファイルオープン
     print(f"出力ファイル: {args.output}")
     
@@ -81,9 +85,14 @@ def main():
             
             # カテゴリ目標数に達するまでループ
             while category_count < target_count:
-                # バッチ生成
+                # 現在の重複率を計算
+                current_dup_rate = 0.0
+                if category_total_generated[category_name] > 0:
+                    current_dup_rate = category_duplicates[category_name] / category_total_generated[category_name]
+                
+                # バッチ生成（重複率を渡す）
                 try:
-                    batch_results = generator.generate_batch(category_name)
+                    batch_results = generator.generate_batch(category_name, current_dup_rate)
                     consecutive_errors = 0
                 except Exception as e:
                     print(f"生成エラー: {e}")
@@ -104,6 +113,7 @@ def main():
                 # バッチ内の各パターンを処理
                 for code in batch_results:
                     total_generated += 1
+                    category_total_generated[category_name] += 1
                     
                     # 文字数検証
                     if len(code) == 0:
@@ -119,6 +129,7 @@ def main():
                     # 重複チェック
                     if deduplicator.is_duplicate(code):
                         duplicate_count += 1
+                        category_duplicates[category_name] += 1
                         continue
                     
                     # 検証通過 & 重複なし -> ファイルに書き込み
@@ -143,7 +154,12 @@ def main():
                 if category_count > 0 and category_count % 10 == 0:
                     category_progress_pct = (category_count / target_count) * 100
                     category_elapsed_so_far = time.time() - category_start_time
+                    # カテゴリ内重複率
+                    cat_dup_rate = 0
+                    if category_total_generated[category_name] > 0:
+                        cat_dup_rate = (category_duplicates[category_name] / category_total_generated[category_name]) * 100
                     print(f"  [{category_name}] {category_count}/{target_count} ({category_progress_pct:.1f}%) | "
+                          f"重複率: {cat_dup_rate:.1f}% | "
                           f"経過: {timedelta(seconds=int(category_elapsed_so_far))}")
                 
                 # 全体進捗表示（100パターンごと）
@@ -158,8 +174,15 @@ def main():
             category_end_time = time.time()
             category_elapsed = category_end_time - category_start_time
             category_times[category_name] = category_elapsed
+            
+            # カテゴリ内重複率計算
+            cat_dup_rate = 0
+            if category_total_generated[category_name] > 0:
+                cat_dup_rate = (category_duplicates[category_name] / category_total_generated[category_name]) * 100
+            
             print(f"\n{category_name} 完了: {category_count}/{target_count} パターン")
             print(f"所要時間: {timedelta(seconds=int(category_elapsed))}")
+            print(f"重複率: {cat_dup_rate:.1f}% ({category_duplicates[category_name]}/{category_total_generated[category_name]})")
             
             # テストモードの場合、即座に推定値を表示
             if args.test and category_count > 0:

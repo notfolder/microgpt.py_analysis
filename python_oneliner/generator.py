@@ -168,31 +168,42 @@ Vary the patterns and avoid duplicating the examples."""
         
         return prompt
     
-    def get_temperature(self, category: str) -> float:
+    def get_temperature(self, category: str, duplicate_rate: float = 0.0) -> float:
         """
-        温度パラメータを取得
+        温度パラメータを取得（重複率に応じて動的調整）
         
         Args:
             category: カテゴリ名
+            duplicate_rate: 現在の重複率（0.0-1.0）
             
         Returns:
             温度パラメータ
         """
         progress = self.category_progress.get(category, 0)
         
+        # 基本温度（進捗に応じて）
         if progress >= 1000:
-            return TEMPERATURE_HIGH
+            base_temp = TEMPERATURE_HIGH
         elif progress >= 500:
-            return TEMPERATURE_MID
+            base_temp = TEMPERATURE_MID
         else:
-            return TEMPERATURE_BASE
+            base_temp = TEMPERATURE_BASE
+        
+        # 重複率に応じて温度を加算（50%以上で追加）
+        if duplicate_rate > 0.5:
+            # 50%超えたら+0.05、70%超えたら+0.1
+            temp_boost = min(0.15, (duplicate_rate - 0.5) * 0.3)
+            return min(1.2, base_temp + temp_boost)  # 最大1.2まで
+        
+        return base_temp
     
-    def generate_batch(self, category: str) -> List[str]:
+    def generate_batch(self, category: str, duplicate_rate: float = 0.0) -> List[str]:
         """
         LM Studioで1バッチ生成
         
         Args:
             category: カテゴリ名
+            duplicate_rate: 現在の重複率（0.0-1.0）
             
         Returns:
             生成されたワンライナーのリスト
@@ -208,8 +219,8 @@ Vary the patterns and avoid duplicating the examples."""
         # ユーザープロンプトを構築
         user_prompt = self.build_user_prompt(category, samples)
         
-        # 温度パラメータを取得
-        temperature = self.get_temperature(category)
+        # 温度パラメータを取得（重複率を考慮）
+        temperature = self.get_temperature(category, duplicate_rate)
         
         # APIリクエストを構築
         payload = {
