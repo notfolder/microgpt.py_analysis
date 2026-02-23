@@ -33,12 +33,16 @@ TEMPLATE_ROTATION_INTERVAL = 100  # バッチ
 
 # カテゴリ別生成配分
 CATEGORIES: List[Tuple[str, int]] = [
-    ("数値計算", 7000),
-    ("文字列操作", 7000),
-    ("データ構造", 7000),
-    ("組み込み関数", 7000),
-    ("標準ライブラリ", 1500),
-    ("その他・応用", 500),
+    ("数値計算", 5000),
+    ("ビット演算", 2000),
+    ("文字列操作", 5000),
+    ("データ構造", 5000),
+    ("真偽値・条件式", 3000),
+    ("組み込み関数", 4000),
+    ("型変換", 2000),
+    ("スライス記法", 2000),
+    ("標準ライブラリ", 1000),
+    ("その他・応用", 1000),
 ]
 
 # 目標総数
@@ -67,10 +71,14 @@ Avoid:
 
 # カテゴリ別英語名マッピング
 CATEGORY_ENGLISH: Dict[str, str] = {
-    "数値計算": "Numeric Computation",
+    "数値計算": "Arithmetic Operations",
+    "ビット演算": "Bitwise Operations",
     "文字列操作": "String Manipulation",
     "データ構造": "Data Structures",
+    "真偽値・条件式": "Boolean and Conditionals",
     "組み込み関数": "Built-in Functions",
+    "型変換": "Type Conversions",
+    "スライス記法": "Slicing Notation",
     "標準ライブラリ": "Standard Library",
     "その他・応用": "Advanced Patterns",
 }
